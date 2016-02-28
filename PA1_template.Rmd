@@ -22,8 +22,9 @@ variables: *mydataRaw* and *mydata*.
 ```
 
 ## What is mean total number of steps taken per day?
-First loads the two packages that we need for this analysis
-```{r, echo=FALSE}
+First loads the two packages *plyr* and *dplyr* that we need for this analysis
+
+```{r, echo=TRUE}
         library(plyr)
         library(dplyr)
 ```
@@ -32,8 +33,6 @@ The daily average steps calculated above are displayed below. First the "NA" val
 are included in the data for the analysis.
 
 ```{r, echo=TRUE}
-        #library(plyr)
-        #library(dplyr)
         myDailyMeanData <- ddply(select(mydata, -interval), .(date), colwise(mean))
         head(myDailyMeanData)
 ```
@@ -65,7 +64,6 @@ For this part of the assignment, the missing values in the dataset are ignored. 
         
 ```{r, echo=TRUE}      
         summary(myDailyTStepsData$steps)
-
 ```
 
   
@@ -143,6 +141,7 @@ What is the impact of imputing missing data on the estimates of the total daily 
 
 #### (1) Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating
 ####     whether a given date is a weekday or weekend day.
+
 ```{r, echo=TRUE}      
   
         library(data.table)
@@ -167,7 +166,3 @@ What is the impact of imputing missing data on the estimates of the total daily 
 
 ```
 
-```{r, echo=TRUE}      
-  
-
-```
