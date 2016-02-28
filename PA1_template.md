@@ -4,8 +4,8 @@
 ## Loading and preprocessing the data
 
 The following code read in the data from the current working directory, changes the 
-*date* column data from a factor to a date format, and saves the date in two data.frame
-variables: *mydataRaw* and *mydata*.
+*date* column data format from a factor to a date format, and saves the date in two 
+data.frame variables: *mydataRaw* and *mydata* for later use.
 
 
 ```r
@@ -17,35 +17,17 @@ variables: *mydataRaw* and *mydata*.
         mydata$date <- format(as.Date(mydata$date), "%A %B %d")
 ```
 
+
 ## What is mean total number of steps taken per day?
-First loads the two packages *plyr* and *dplyr* that we need for this analysis
+First loads the two packages *plyr* and *dplyr* that we need for this analysis:
 
 
 ```r
-        library(plyr)
-        library(dplyr)
+        suppressMessages(library(plyr))
+        suppressMessages(library(dplyr))
 ```
 
-```
-## 
-## Attaching package: 'dplyr'
-## 
-## The following objects are masked from 'package:plyr':
-## 
-##     arrange, count, desc, failwith, id, mutate, rename, summarise,
-##     summarize
-## 
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-The daily average steps calculated above are displayed below. First the "NA" values 
-are included in the data for the analysis.
+The daily average steps calculated above are displayed below. First the "NA" values are included in the data for the analysis jus for information only.
 
 
 ```r
@@ -64,14 +46,14 @@ are included in the data for the analysis.
 ```
 
 
-For this part of the assignment, the missing values in the dataset are ignored. Ignoriing the missing values in the dataset, the daily total steps are calculated as follows:
+For this part of the assignment, the missing values in the dataset are ignored. The missing values in the dataset are ignored using the *na.omit* function. The follows:
 
-#### (1) Calculate the total number of steps taken per day
+*(1) Calculate the total number of steps taken per day*
 
 
 ```r
-        myDataClean <- na.omit(mydata) # removing na and nan  
-        myDailyTStepsData <- ddply(select(myDataClean, -interval), .(date), colwise(sum))         
+        mydataClean <- na.omit(mydata) # removing na and nan  
+        myDailyTStepsData <- ddply(select(mydataClean, -interval), .(date), colwise(sum))         
         head(myDailyTStepsData)
 ```
 
@@ -85,7 +67,8 @@ For this part of the assignment, the missing values in the dataset are ignored. 
 ## 6  Friday October 19 11829
 ```
 
-#### (2) Histogram of the total number of steps taken each day
+
+*(2) Histogram of the total number of steps taken each day*
 
 
 ```r
@@ -94,13 +77,13 @@ For this part of the assignment, the missing values in the dataset are ignored. 
         par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 1, 1, 0))
         with(myDailyTStepsData, hist(steps, breaks = 15,
                                      main = "Total Number of Steps Taken Each Day", 
-                                     xlab = "Daily total Number of Steps(-)", 
-                                      col = "red"))
+                                     xlab = "Daily Total Number of Steps(-)", 
+                                      col = "steelblue"))
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
 
-#### (3) Mean and median of the total number of steps taken per day
+*(3) Mean and median of the total number of steps taken per day*
         
 
 ```r
@@ -114,30 +97,29 @@ For this part of the assignment, the missing values in the dataset are ignored. 
 
   
 ## What is the average daily activity pattern?
+Two questiones are addressed in this subsection.
 
-#### (1) Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the 
-####     average number of steps taken, averaged across all days (y-axis)
+*(1) Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).*
         
 
 ```r
         windows.options(width = 480, height = 480)
         par(cex.axis = 0.8, cex.lab = 0.8, cex.main = 1.2, cex.sub = 0.8)
         par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 1, 0, 0))
-        mydata2 <- na.omit(mydata)
-        with(mydata2, {plot(interval, steps, xlab = "", ylab = "Number of Steps (-)",  
-                            type = "l", lty = 1, lwd = 1.5)})
-        
-        abline(h=mean(mydata2$steps),col=4,lty=1, lwd=3)
+        mydataCleanAvg <- ddply(select(mydataClean, -date), .(interval), colwise(mean))
+        with(mydataCleanAvg, {plot(interval, steps, xlab = "intervals", ylab = "Number of Steps (-)",  
+                              type = "l", lty = 1, lwd = 1.5, col="steelblue")})
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
 
-#### (2) Which 5-minute interval, on average across all the days in the dataset, contains the 
-####     maximum number of steps?
+
+*(2) Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?*
+
 
 ```r
         library(magrittr)
-        mydata2 %>% filter(mydata2$steps == max(mydata2$steps)) %>% print
+        mydataClean %>% filter(mydataClean$steps == max(mydataClean$steps)) %>% print
 ```
 
 ```
@@ -148,8 +130,9 @@ For this part of the assignment, the missing values in the dataset are ignored. 
 
 
 ## Imputing missing values
+Four questions are addressed in this subsection:
 
-#### (1) Calculate and report the total number of missing values in the dataset
+*(1) Calculate and report the total number of missing values in the dataset*
 
 
 ```r
@@ -162,31 +145,31 @@ For this part of the assignment, the missing values in the dataset are ignored. 
 ```
 
 
-#### (2) Filling in all of the missing values in the dataset using mediam of the same day
+*(2) Filling in all of the missing values in the dataset using mean of 5-minute interval values*
 
 
 ```r
         library(plyr)
-        mydataFd <- ddply(mydata,.(date),transform,steps=ifelse(is.na(steps),median(steps,na.rm=TRUE),steps))
+        mydata <- mydataRaw
+        mydataFd <- ddply(mydata,.(interval),transform,steps=ifelse(is.na(steps),mean(steps,na.rm=TRUE),steps))
 ```
 
-#### (3) New dataset that is equal to the original dataset but with the missing data filled in 
+
+*(3) New dataset that is equal to the original dataset but with the missing data filled in*
 
 ```r
-        head(mydataFd, n=5)
+        head(mydataFd, n=2)
 ```
 
 ```
-##   steps               date interval
-## 1     0 Friday November 02        0
-## 2     0 Friday November 02        5
-## 3     0 Friday November 02       10
-## 4     0 Friday November 02       15
-## 5     0 Friday November 02       20
+##      steps       date interval
+## 1 1.716981 2012-10-01        0
+## 2 0.000000 2012-10-02        0
 ```
-  
-#### (4) Make a histogram of the total number of steps taken each day and Calculate and report the mean 
-####     and median total number of steps taken per day. 
+The the first interval values of October first and second *steps* variables are filled with average values, in the raw data these values were filled with *NAs*.
+
+
+*(4) Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day.*
 
 
 ```r
@@ -195,55 +178,54 @@ For this part of the assignment, the missing values in the dataset are ignored. 
         par(mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 1, 1, 0))
         myDailyTStepsDataFd <- ddply(select(mydataFd, -interval), .(date), colwise(sum))
         with(myDailyTStepsDataFd, hist(steps, breaks = 15,
-                                     main = "Total Number of Steps Taken Each Day", 
-                                     xlab = "Daily total Number of Steps(-)", 
-                                     col = "red"))
+                                     main = "Total Number of Steps Taken Each Day with Missing Data Filled", 
+                                     xlab = "Daily Total Number of Steps(-)", 
+                                     col = "steelblue"))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-13-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
+
+*Calculate and report the mean and median of the total number of steps taken per day with missing data filled*
 
 
-Do these values differ from the estimates from the first part of the assignment? 
-What is the impact of imputing missing data on the estimates of the total daily number of steps?  
-  
+```r
+        myDailyTStepsFData <- ddply(select(mydataFd, -interval), .(date), colwise(sum)) 
+        summary(myDailyTStepsFData$steps)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9819   10770   10770   12810   21190
+```
+
+The mean and the median od the number of steps from the previous and this step (after the missing values filled with the mean of the 5-minutes interval) are identical. The total number of the steps has increased. Since the missing values are systematiclly sampled from the same data set, it has no much impact of the total population. The missing data are in eight full day data, so filling the with average data of the data it self has no significant impact, it only affects the frequency of occurance of the data only.  
+
+
 ## Are there differences in activity patterns between weekdays and weekends?
+The two questions are addressed in this subsection:
 
-
-#### (1) Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating
-####     whether a given date is a weekday or weekend day.
+*(1) Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.*
 
 
 ```r
-        library(data.table)
-```
-
-```
-## 
-## Attaching package: 'data.table'
-## 
-## The following objects are masked from 'package:dplyr':
-## 
-##     between, last
-```
-
-```r
-        myDT <- data.table(mydataRaw)
+        suppressMessages(library(data.table))
+        myDT <- data.table(mydataFd)
         myDT <- na.omit(myDT)
         setkey(myDT, date)
         myDT[, WDType := ifelse( weekdays(date) %in% c("Saturday", "Sunday"), "weekday", "weekend"), by=date]
 ```
 
-#### (2) Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval 
-####     (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days
-####     (y-axis). See the README file in the GitHub repository to see an example of what this plot should
-####     look like using simulated data
+
+*(2) Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data*
         
 
 ```r
         library(lattice)
         myDTmean <- ddply(select(myDT,-date) , .(interval, WDType), colwise(mean))
-        xyplot(steps ~ interval | WDType, data = myDTmean, layout = c(1, 2), type='l', col='blue')
+        xyplot(steps ~ interval | WDType, data = myDTmean, layout = c(1, 2), type='l', col='steelblue')
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-15-1.png) 
+
+It is clearly evident from the histogram plots of the activities patterns that the weekdays activities are different from the weekend. On average the average number of steps of the weekdays are higher than the weekend.
 
